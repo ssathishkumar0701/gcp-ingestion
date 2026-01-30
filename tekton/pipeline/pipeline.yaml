@@ -7,3 +7,4 @@ spec:
     - name: hello
       taskRef:
         name: hello-task
+
