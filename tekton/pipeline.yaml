@@ -1,0 +1,66 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: dataflow-flex-pipeline
+spec:
+  params:
+    - name: PROJECT
+    - name: IMAGE
+    - name: TEMPLATE_PATH
+    - name: TEMP_LOCATION
+  workspaces:
+    - name: shared
+  tasks:
+    - name: terraform
+      taskRef:
+        name: terraform-apply
+      params:
+        - name: PROJECT_ID
+          value: $(params.PROJECT)
+        - name: TF_DIR
+          value: terraform
+      workspaces:
+        - name: source
+          workspace: shared
+
+    - name: build-image
+      runAfter: ["terraform"]
+      taskRef:
+        name: build-image
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE)
+      workspaces:
+        - name: source
+          workspace: shared
+
+    - name: build-template
+      runAfter: ["build-image"]
+      taskRef:
+        name: build-flex-template
+      params:
+        - name: PROJECT
+          value: $(params.PROJECT)
+        - name: IMAGE
+          value: $(params.IMAGE)
+        - name: TEMPLATE_PATH
+          value: $(params.TEMPLATE_PATH)
+      workspaces:
+        - name: source
+          workspace: shared
+
+    - name: run-dataflow
+      runAfter: ["build-template"]
+      taskRef:
+        name: run-dataflow
+      params:
+        - name: PROJECT
+          value: $(params.PROJECT)
+        - name: REGION
+          value: us-central1
+        - name: JOB_NAME
+          value: tekton-flex-job
+        - name: TEMPLATE_PATH
+          value: $(params.TEMPLATE_PATH)
+        - name: TEMP_LOCATION
+          value: $(params.TEMP_LOCATION)

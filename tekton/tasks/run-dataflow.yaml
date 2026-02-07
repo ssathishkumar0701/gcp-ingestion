@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: run-dataflow
+spec:
+  params:
+    - name: PROJECT
+    - name: REGION
+    - name: JOB_NAME
+    - name: TEMPLATE_PATH
+    - name: TEMP_LOCATION
+  steps:
+    - name: run
+      image: google/cloud-sdk
+      env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secret/key.json
+      volumeMounts:
+        - name: gcp-key
+          mountPath: /secret
+      script: |
+        gcloud dataflow flex-template run $(params.JOB_NAME) \
+          --project=$(params.PROJECT) \
+          --region=$(params.REGION) \
+          --template-file-gcs-location=$(params.TEMPLATE_PATH) \
+          --temp-location=$(params.TEMP_LOCATION)
+  volumes:
+    - name: gcp-key
+      secret:
+        secretName: gcp-sa-key

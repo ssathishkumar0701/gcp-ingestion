@@ -1,0 +1,7 @@
+{
+  "name": "tekton-dataflow-job",
+  "description": "Deploy Dataflow using Tekton + Terraform",
+  "sdk_info": {
+    "language": "PYTHON"
+  }
+}

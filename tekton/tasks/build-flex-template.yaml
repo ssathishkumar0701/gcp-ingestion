@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: build-flex-template
+spec:
+  params:
+    - name: PROJECT
+    - name: IMAGE
+    - name: TEMPLATE_PATH
+  workspaces:
+    - name: source
+  steps:
+    - name: build
+      image: google/cloud-sdk
+      env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secret/key.json
+      volumeMounts:
+        - name: gcp-key
+          mountPath: /secret
+      script: |
+        gcloud dataflow flex-template build $(params.TEMPLATE_PATH) \
+          --image=$(params.IMAGE) \
+          --sdk-language=PYTHON \
+          --metadata-file=metadata.json
+  volumes:
+    - name: gcp-key
+      secret:
+        secretName: gcp-sa-key

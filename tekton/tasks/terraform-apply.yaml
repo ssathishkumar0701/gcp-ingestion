@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: terraform-apply
+spec:
+  params:
+    - name: PROJECT_ID
+    - name: TF_DIR
+  workspaces:
+    - name: source
+  steps:
+    - name: terraform
+      image: hashicorp/terraform:1.6
+      env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secret/key.json
+        - name: TF_VAR_project_id
+          value: $(params.PROJECT_ID)
+      workingDir: $(workspaces.source.path)/$(params.TF_DIR)
+      volumeMounts:
+        - name: gcp-key
+          mountPath: /secret
+      script: |
+        terraform init
+        terraform apply -auto-approve
+  volumes:
+    - name: gcp-key
+      secret:
+        secretName: gcp-sa-key

@@ -1,0 +1,27 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: dataflow-trigger-template
+spec:
+  params:
+    - name: gitrevision
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: dataflow-run-
+      spec:
+        pipelineRef:
+          name: dataflow-flex-pipeline
+        workspaces:
+          - name: shared
+            emptyDir: {}
+        params:
+          - name: PROJECT
+            value: YOUR_PROJECT
+          - name: IMAGE
+            value: us-central1-docker.pkg.dev/YOUR_PROJECT/dataflow-repo/beam:$(tt.params.gitrevision)
+          - name: TEMPLATE_PATH
+            value: gs://YOUR_PROJECT-df-templates/flex/job.json
+          - name: TEMP_LOCATION
+            value: gs://YOUR_PROJECT-df-temp/tmp
